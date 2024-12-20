@@ -9,6 +9,9 @@ from flask import request
 def run_server(handlers: typing.Dict):
     app = Flask("Battlesnake")
 
+    # store game state for testing
+    game_state_save = []
+
     @app.get("/")
     def on_info():
         return handlers["info"]()
@@ -16,25 +19,28 @@ def run_server(handlers: typing.Dict):
     @app.post("/start")
     def on_start():
         game_state = request.get_json()
+        game_state_save.append(game_state)
         handlers["start"](game_state)
         return "ok"
 
     @app.post("/move")
     def on_move():
         game_state = request.get_json()
+        game_state_save.append(game_state)
         return handlers["move"](game_state)
 
     @app.post("/end")
     def on_end():
         game_state = request.get_json()
+
+        game_state_save.append(game_state)
+
         handlers["end"](game_state)
         return "ok"
 
     @app.after_request
     def identify_server(response):
-        response.headers.set(
-            "server", "battlesnake/github/starter-snake-python"
-        )
+        response.headers.set("server", "battlesnake/github/starter-snake-python")
         return response
 
     host = "0.0.0.0"
@@ -43,4 +49,4 @@ def run_server(handlers: typing.Dict):
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
     print(f"\nRunning Battlesnake at http://{host}:{port}")
-    app.run(host=host, port=port)
+    app.run(host=host, port=port, debug=True)
